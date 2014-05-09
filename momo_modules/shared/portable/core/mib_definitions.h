@@ -62,6 +62,8 @@ typedef struct
 #endif
 
 #define kModuleDescriptorSize 11
+#define kModuleIdentifierSize 6
+#define kRegistrationPayloadSize (kModuleDescriptorSize + kModuleIdentifierSize)
 
 //Macros for defining parameter lists
 #define plist_ints(count)		((count&0b11) << 5)

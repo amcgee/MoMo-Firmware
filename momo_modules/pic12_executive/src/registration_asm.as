@@ -13,6 +13,7 @@ ASM_INCLUDE_GLOBALS()
 
 global _mib_to_fsr0, _get_magic, _get_mib_block
 global _copy_fsr, _bus_master_rpc_sync
+global _load_module_id, _save_module_id
 
 PSECT text_asm_register,local,class=CODE,delta=2
 
@@ -38,6 +39,9 @@ BEGINFUNCTION _register_module
 	movlw kModuleDescriptorSize
 	call _copy_fsr
 
+	;load the current ID into the rest of the buffer, it might be 0
+	call _load_module_id
+
 	;mib_buffer now has the module descriptor
 	;send it to controller endpoint(40, 0)
 	banksel _mib_data
@@ -46,7 +50,7 @@ BEGINFUNCTION _register_module
 	
 	clrf  BANKMASK(bus_command)
 	
-	movlw plist_with_buffer(0, kModuleDescriptorSize)
+	movlw plist_with_buffer(0, kRegistrationPayloadSize)
 	movwf BANKMASK(bus_spec)
 
 	movlw kMIBControllerAddress
@@ -58,7 +62,9 @@ BEGINFUNCTION _register_module
 		retlw 0
 
 	;If the call was successful, our address is in the first byte of the 
-	;mib buffer
+	;mib buffer, and the id is in the rest
+	call _save_module_id
+
 	banksel _mib_data
 	movf BANKMASK(mib_buffer),w
 	return
