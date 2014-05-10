@@ -498,6 +498,13 @@ class MIBController (proxy.MIBProxyObject):
 			if e.type == 7:
 				return None
 
+	def get_uuid(self):
+		res = self.rpc( 43, 0x10, result_type=(0,True) );
+		return res['buffer'];
+
+	def set_uuid(self, uuid):
+		self.rpc( 43, 0x11, str(uuid) );
+
 	def reset(self, sync=True):
 		"""
 		Instruct the controller to reset itself.

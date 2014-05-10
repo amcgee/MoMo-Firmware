@@ -4,8 +4,12 @@
 #include "rtcc.h"
 #include "flash_queue.h"
 
+#define CONTROLLER_UUID_SIZE 4
+
 typedef struct {
   bool registered;
+  uint8 controller_uuid[ CONTROLLER_UUID_SIZE ];
+  uint16 allocated_module_id_count;
 } MoMoState;
 
 #ifndef MOMO_STATE_CONTROLLER

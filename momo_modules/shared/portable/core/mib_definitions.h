@@ -59,6 +59,18 @@ typedef struct
 	uint8 	name[7];
 	uint8	feature_count;
 } momo_module_descriptor;
+
+typedef struct
+{
+	uint8 controler_uuid[16];
+	uint8 module_id[4];
+} momo_module_identifier;
+
+typedef struct
+{
+	momo_module_descriptor descriptor;
+	momo_module_identifier id;
+} momo_module;
 #endif
 
 #define kModuleDescriptorSize 11

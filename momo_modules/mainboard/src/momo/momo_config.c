@@ -23,6 +23,10 @@ void init_momo_config( unsigned int subsection_index )
 void reset_momo_state()
 {
   current_momo_state.registered = false;
+  current_momo_state.controller_uuid[0] = 0;
+  current_momo_state.controller_uuid[1] = 0;
+  current_momo_state.controller_uuid[2] = 0;
+  current_momo_state.controller_uuid[3] = 0;
   config_state = kClean;
 }
 void load_momo_state()

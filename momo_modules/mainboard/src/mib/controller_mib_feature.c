@@ -12,10 +12,11 @@
 #include "rtcc.h"
 #include "i2c.h"
 #include "bus.h"
+#include "momo_config.h"
 
 #define MODULE_BASE_ADDRESS 11
 
-static momo_module_descriptor the_modules[MAX_MODULES];
+static momo_module the_modules[MAX_MODULES];
 static unsigned int module_count = 0;
 static flash_block_info fb_info;
 
@@ -78,7 +79,13 @@ void register_module(void)
 		return;
 	}
 
-	memcpy( (void*)(&the_modules[module_count]), plist_get_buffer(0), sizeof( momo_module_descriptor ) );
+	memcpy( (void*)(&the_modules[module_count]), plist_get_buffer(0), sizeof( momo_module ) );
+
+	// uint8 i;
+	// for ( i=0; i<4; ++i )
+	// {
+	// 	if ( )
+	// }
 
 	bus_slave_return_int16( MODULE_BASE_ADDRESS + module_count );
 	++module_count;
@@ -203,6 +210,22 @@ void set_sleep()
 		taskloop_set_flag(kTaskLoopSleepBit, 0);
 }
 
+void get_controller_uuid()
+{
+	bus_slave_return_buffer( &current_momo_state.controller_uuid, CONTROLLER_UUID_SIZE );
+}
+void set_controller_uuid()
+{
+	if ( plist_get_buffer_length() != CONTROLLER_UUID_SIZE )
+	{
+		bus_slave_seterror( kCallbackError );
+		return;
+	}
+
+	memcpy( &current_momo_state.controller_uuid, plist_get_buffer(0), CONTROLLER_UUID_SIZE );
+	save_momo_state();
+}
+
 
 DEFINE_MIB_FEATURE_COMMANDS(controller) {
 	{0x00, register_module, plist_spec(0,true) },
@@ -221,5 +244,8 @@ DEFINE_MIB_FEATURE_COMMANDS(controller) {
 	{0x0D, debug_value, plist_spec_empty()},
 	{0x0E, set_sleep, plist_spec(1, false)},
 	{0x0F, reset_self, plist_spec_empty()},
+
+	{0x10, get_controller_uuid, plist_spec_empty()},
+	{0x11, set_controller_uuid, plist_spec(0,true)}
 };
 DEFINE_MIB_FEATURE(controller);

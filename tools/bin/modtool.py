@@ -333,7 +333,7 @@ class ModTool(cmdln.Cmdln):
 
 	@cmdln.option('-p', '--port', help='Serial port that fsu is plugged into')
 	def do_scheduler(self, subcmd, opts, command, index = None):
-		"""${cmd_name}: Get the current battery voltage
+		"""${cmd_name}: Test and inspect scheduled callbacks
 
 		Possible subcommands are heartbeat, reset and attached.  
 		- new creates a new dummy scheduled task (address 43, feature 20, command 8, frequency 1s)
@@ -385,6 +385,28 @@ class ModTool(cmdln.Cmdln):
 		else:
 			print "Invalid subcommand specified for command 'scheduler'."
 			exit(1)
+
+	@cmdln.option('-p', '--port', help='Serial port that fsu is plugged into')
+	def do_uuid(self, subcmd, opts, command, uuid = None):
+		"""${cmd_name}: Get or set the controller UUID
+
+		Possible sub-commands:
+		- get
+		- set <uuid>
+
+		${cmd_usage}
+		${cmd_option_list}
+		"""
+
+		con = self._get_controller(opts)
+		if command == "get":
+			print con.get_uuid()
+		elif command == "set":
+			if uuid == None:
+				print "No UUID specified."
+				exit(1)
+			con.set_uuid( uuid )
+			print "success"
 
 	def _get_controller(self, opts):
 		try:
