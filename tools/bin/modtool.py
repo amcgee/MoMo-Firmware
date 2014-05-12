@@ -276,6 +276,8 @@ class ModTool(cmdln.Cmdln):
 		mod = con.describe_module(int(index))
 
 		print "Module at index %d" % int(index)
+		print "Hardware: %d" % mod.hw
+		print "Type: %d" % mod.type
 		print "Name: %s" % mod.name
 		print "Address: %d" % mod.address
 		print "Features: %d" % mod.num_features

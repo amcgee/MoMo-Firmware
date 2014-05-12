@@ -17,11 +17,13 @@
 #define kMIBUnenumeratedAddress		127
 
 //Defined MIB Module Types
-#define kMIBControllerType 			1
-#define kMIBCommunicationType		2
-#define kMIBGenericType				3
-#define kMIBExecutiveOnlyType		4
-#define kMIBSensorType				5
+//  These are bit flags, so multiple types are possible.
+//  i.e. 18 = 0b00010010 = Sensor + Communication
+#define kMIBControllerType 			0b00000001
+#define kMIBCommunicationType		0b00000010
+#define kMIBGenericType				  0v00000100
+#define kMIBExecutiveOnlyType		0v00001000
+#define kMIBSensorType				  0v00010000
 
 //Defined MIB Hardware Types
 #define kMIBPic12lf1822					2
