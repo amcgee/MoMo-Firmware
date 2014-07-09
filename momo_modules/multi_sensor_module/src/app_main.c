@@ -20,33 +20,54 @@ extern unsigned int adc_result;
 
 uint16 read_venturi(void)
 {
-	uint8 i = VENTURI_SAMPLE_COUNT;
-	uint16 avg = 0;
-	uint16 offset = 0;
-
-	damp_set_parameter( kInvertInputParamter, false );
-	damp_enable();
-	sample_analog(); // +signal + offset
-	damp_disable();
-	offset = adc_result;
-	
-	damp_set_parameter( kInvertInputParamter, true );
-	damp_enable();
-	sample_analog(); // -signal + offset
-	damp_disable();
-	offset += adc_result; // = 2 * offset
-	offset /= 2;
+	uint8 i;
+	uint16 a = 0, b = 0;
+	// uint16 offset = 0;
 
 	damp_set_parameter( kInvertInputParamter, true );
+	i = VENTURI_SAMPLE_COUNT;
 	while ( i > 0 )
 	{
 		damp_enable();
 		sample_analog();
 		damp_disable();
-		avg += adc_result - offset;
+		a += adc_result;
 		--i;
 	}
-	return ( avg / VENTURI_SAMPLE_COUNT );
+
+	damp_set_parameter( kInvertInputParamter, false );
+	i = VENTURI_SAMPLE_COUNT;
+	while ( i > 0 )
+	{
+		damp_enable();
+		sample_analog();
+		damp_disable();
+		b += adc_result;
+		--i;
+	}
+
+	// damp_enable();
+	// sample_analog(); // -signal + offset
+	// damp_disable();
+	// offset = adc_result;
+	
+
+	// damp_enable();
+	// sample_analog(); // +signal + offset
+	// damp_disable();
+	// offset += adc_result; // = 2 * offset
+	// offset /= 2;
+
+	// damp_set_parameter( kInvertInputParamter, true );
+	// while ( i > 0 )
+	// {
+	// 	damp_enable();
+	// 	sample_analog();
+	// 	damp_disable();
+	// 	avg += adc_result - offset;
+	// 	--i;
+	// }
+	return ( (a - b) / VENTURI_SAMPLE_COUNT );
 }
 
 void task(void)
