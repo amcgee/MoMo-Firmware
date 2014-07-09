@@ -69,6 +69,7 @@ void task(void)
 
 		bus_master_prepare_rpc(70, 0, plist_with_buffer(2, 4));
 		bus_master_send_rpc(8);
+		state.push_pending = 0;
 	}
 }
 
@@ -209,8 +210,5 @@ void read_pulses()
 
 void scheduled_callback()
 {
-	if ( state.acquire_pulse == 0 )
-	{
-		state.push_pending = 1;
-	}
+	state.push_pending = 1;
 }
