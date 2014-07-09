@@ -37,7 +37,7 @@ uint16 read_venturi(void)
 	offset += adc_result; // = 2 * offset
 	offset /= 2;
 
-	damp_set_parameter( kInvertInputParamter, false );
+	damp_set_parameter( kInvertInputParamter, true );
 	damp_enable();
 	while ( i > 0 )
 	{
