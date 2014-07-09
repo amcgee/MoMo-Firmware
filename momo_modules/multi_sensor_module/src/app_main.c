@@ -18,6 +18,37 @@ extern unsigned int adc_result;
 
 #define VENTURI_SAMPLE_COUNT 50
 
+uint16 read_venturi(void)
+{
+	uint8 i = VENTURI_SAMPLE_COUNT;
+	uint16 avg = 0;
+	uint16 offset = 0;
+
+	damp_set_parameter( kInvertInputParamter, false );
+	damp_enable();
+	sample_analog(); // +signal + offset
+	damp_disable();
+	offset = adc_result;
+	
+	damp_set_parameter( kInvertInputParamter, true );
+	damp_enable();
+	sample_analog(); // -signal + offset
+	damp_disable();
+	offset += adc_result; // = 2 * offset
+	offset /= 2;
+
+	damp_set_parameter( kInvertInputParamter, false );
+	damp_enable();
+	i = VENTURI_SAMPLE_COUNT;
+	while ( i > 0 )
+	{
+		sample_analog();
+		avg += adc_result;
+	}
+	damp_disable();
+	return ( avg / VENTURI_SAMPLE_COUNT ) - offset;
+}
+
 void task(void)
 {
 	if ( state.push_pending )
@@ -38,8 +69,6 @@ void task(void)
 
 		bus_master_prepare_rpc(70, 0, plist_with_buffer(2, 4));
 		bus_master_send_rpc(8);
-
-		aggregate_counter = 0;
 	}
 }
 
@@ -83,8 +112,6 @@ void initialize(void)
 
 	damp_init();
 	state.combined_state = 0;
-
-	aggregate_counter = 0;
 
 	bus_master_begin_rpc();
 
