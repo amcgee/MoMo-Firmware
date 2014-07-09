@@ -153,37 +153,6 @@ void check_v2()
 	bus_slave_setreturn(pack_return_status(0, 2));
 }
 
-uint16 read_venturi(void)
-{
-	uint8 i = VENTURI_SAMPLE_COUNT;
-	uint16 avg = 0;
-	uint16 offset = 0;
-
-	damp_set_parameter( kInvertInputParamter, false );
-	damp_enable();
-	sample_analog(); // +signal + offset
-	damp_disable();
-	offset = adc_result;
-	
-	damp_set_parameter( kInvertInputParamter, true );
-	damp_enable();
-	sample_analog(); // -signal + offset
-	damp_disable();
-	offset += adc_result; // = 2 * offset
-	offset /= 2;
-
-	damp_set_parameter( kInvertInputParamter, false );
-	damp_enable();
-	i = VENTURI_SAMPLE_COUNT;
-	while ( i > 0 )
-	{
-		sample_analog();
-		avg += adc_result;
-	}
-	damp_disable();
-	return ( avg / VENTURI_SAMPLE_COUNT ) - offset;
-}
-
 void check_v3()
 {
 	sample_v3();
