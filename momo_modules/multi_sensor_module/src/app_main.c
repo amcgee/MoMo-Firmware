@@ -22,36 +22,24 @@ void task(void)
 {
 	if ( state.push_pending )
 	{
-		if ( pulse_count() == 0 )
-		{
-			state.acquire_pulse = 0;
-			state.push_pending = 0;
-			if ( aggregate_counter != 0 )
-			{
-				bus_master_begin_rpc();
-				mib_buffer[0] = mib_address;
-				mib_buffer[1] = 0;
+		bus_master_begin_rpc();
+		mib_buffer[0] = mib_address;
+		mib_buffer[1] = 0;
 
-				mib_buffer[2] = 0;
-				mib_buffer[3] = 0; //metadata
+		mib_buffer[2] = 0;
+		mib_buffer[3] = 0; //metadata
 
-				uint16 value = read_venturi();
+		uint16 value = read_venturi();
 
-				mib_buffer[4] = value & 0xFF;
-				mib_buffer[5] = (value >> 8) & 0xFF;
-				mib_buffer[6] = 0;
-				mib_buffer[7] = 0;
+		mib_buffer[4] = value & 0xFF;
+		mib_buffer[5] = (value >> 8) & 0xFF;
+		mib_buffer[6] = 0;
+		mib_buffer[7] = 0;
 
-				bus_master_prepare_rpc(70, 0, plist_with_buffer(2, 4));
-				bus_master_send_rpc(8);
+		bus_master_prepare_rpc(70, 0, plist_with_buffer(2, 4));
+		bus_master_send_rpc(8);
 
-				aggregate_counter = 0;
-			}
-		}
-		else
-		{
-			aggregate_counter += pulse_count();
-		}
+		aggregate_counter = 0;
 	}
 }
 
