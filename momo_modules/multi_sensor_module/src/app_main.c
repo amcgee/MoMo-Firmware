@@ -67,7 +67,7 @@ uint16 read_venturi(void)
 	// 	avg += adc_result - offset;
 	// 	--i;
 	// }
-	return ( (a - b) / VENTURI_SAMPLE_COUNT );
+	return ( (a - b) / (2 * VENTURI_SAMPLE_COUNT) );
 }
 
 void task(void)
