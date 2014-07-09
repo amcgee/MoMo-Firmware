@@ -114,6 +114,10 @@ void initialize(void)
 	damp_init();
 	state.combined_state = 0;
 
+	damp_set_parameter( kStage1GainParameter, 10 );
+	damp_set_parameter( kStage2GainParameter, 7 );
+	damp_set_parameter( kOffsetParameter, 100 );
+
 	bus_master_begin_rpc();
 
 	mib_buffer[0] = mib_address;
