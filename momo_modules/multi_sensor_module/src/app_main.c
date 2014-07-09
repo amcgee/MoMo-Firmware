@@ -16,48 +16,41 @@
 MultiSensorState state;
 extern unsigned int adc_result;
 
-static uint16 aggregate_counter;
+#define VENTURI_SAMPLE_COUNT 50
 
 void task(void)
 {
-	while (state.acquire_pulse)
+	if ( state.push_pending )
 	{
-		pulse_sample();
-
-		if ( state.push_pending )
+		if ( pulse_count() == 0 )
 		{
-			if ( pulse_count() == 0 )
+			state.acquire_pulse = 0;
+			state.push_pending = 0;
+			if ( aggregate_counter != 0 )
 			{
-				state.acquire_pulse = 0;
-				state.push_pending = 0;
-				if ( aggregate_counter != 0 )
-				{
-					bus_master_begin_rpc();
-					mib_buffer[0] = mib_address;
-					mib_buffer[1] = 0;
+				bus_master_begin_rpc();
+				mib_buffer[0] = mib_address;
+				mib_buffer[1] = 0;
 
-					mib_buffer[2] = 0;
-					mib_buffer[3] = 0; //metadata
+				mib_buffer[2] = 0;
+				mib_buffer[3] = 0; //metadata
 
-					mib_buffer[4] = aggregate_counter;
-					mib_buffer[5] = 0;
-					mib_buffer[6] = 0;
-					mib_buffer[7] = 0;
+				uint16 value = read_venturi();
 
-					bus_master_prepare_rpc(70, 0, plist_with_buffer(2, 4));
-					bus_master_send_rpc(8);
+				mib_buffer[4] = value & 0xFF;
+				mib_buffer[5] = (value >> 8) & 0xFF;
+				mib_buffer[6] = 0;
+				mib_buffer[7] = 0;
 
-					aggregate_counter = 0;
-				}
-			}
-			else
-			{
-				aggregate_counter += pulse_count();
+				bus_master_prepare_rpc(70, 0, plist_with_buffer(2, 4));
+				bus_master_send_rpc(8);
+
+				aggregate_counter = 0;
 			}
 		}
 		else
 		{
-			state.acquire_pulse = 0;
+			aggregate_counter += pulse_count();
 		}
 	}
 }
@@ -113,7 +106,7 @@ void initialize(void)
 	mib_buffer[2] = 8;
 	mib_buffer[3] = 20;
 
-	mib_buffer[4] = kEverySecond;
+	mib_buffer[4] = kEvery10Seconds;
 	mib_buffer[5] = 0;
 	bus_master_prepare_rpc(43, 0, plist_ints(3));
 
@@ -143,6 +136,37 @@ void check_v2()
 	mib_buffer[1] = (adc_result >> 8) & 0xFF;
 
 	bus_slave_setreturn(pack_return_status(0, 2));
+}
+
+uint16 read_venturi(void)
+{
+	uint8 i = VENTURI_SAMPLE_COUNT;
+	uint16 avg = 0;
+	uint16 offset = 0;
+
+	damp_set_parameter( kInvertInputParamter, false );
+	damp_enable();
+	sample_analog(); // +signal + offset
+	damp_disable();
+	offset = adc_result;
+	
+	damp_set_parameter( kInvertInputParamter, true );
+	damp_enable();
+	sample_analog(); // -signal + offset
+	damp_disable();
+	offset += adc_result; // = 2 * offset
+	offset /= 2;
+
+	damp_set_parameter( kInvertInputParamter, false );
+	damp_enable();
+	i = VENTURI_SAMPLE_COUNT;
+	while ( i > 0 )
+	{
+		sample_analog();
+		avg += adc_result;
+	}
+	damp_disable();
+	return ( avg / VENTURI_SAMPLE_COUNT ) - offset;
 }
 
 void check_v3()
@@ -203,8 +227,6 @@ void scheduled_callback()
 {
 	if ( state.acquire_pulse == 0 )
 	{
-		aggregate_counter = 0;
-		state.acquire_pulse = 1;
 		state.push_pending = 1;
 	}
 }
