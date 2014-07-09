@@ -39,11 +39,11 @@ uint16 read_venturi(void)
 
 	damp_set_parameter( kInvertInputParamter, false );
 	damp_enable();
-	i = VENTURI_SAMPLE_COUNT;
 	while ( i > 0 )
 	{
 		sample_analog();
 		avg += adc_result;
+		--i;
 	}
 	damp_disable();
 	return ( avg / VENTURI_SAMPLE_COUNT ) - offset;

@@ -75,6 +75,12 @@ class SensorTool(cmdln.Cmdln):
 			if not opts.continuous:
 				break
 
+	@cmdln.option('-p', '--port', help='Serial port that fsu is plugged into')
+	@cmdln.option('-a', '--address', help='The MIB address of the multisensor module' )
+	def do_sched(self, subcmd, opts):
+		sens = self._create_proxy(opts)
+		sens.rpc(20,8)
+
 	def _create_proxy(self,opts):
 		try:
 			con = get_controller(opts.port)
