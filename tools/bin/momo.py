@@ -55,7 +55,11 @@ def run_momo():
 	readline.set_completer(complete)
 
 	#If we're in "interactive" mode and ended the initial command with a context, start a shell
-	if interactive and not finished:
+	if not finished:
+		if not interactive:
+			shell.invoke(contexts, ['help'])
+			return 1
+
 		try:
 			while True:
 				linebuf = raw_input("(%s) " % annotate.context_name(contexts[-1]))
@@ -70,7 +74,7 @@ def run_momo():
 					print e.format()
 
 				if len(contexts) == 0:
-					sys.exit(0)
+					return 0
 
 		#Make sure to catch ^C and ^D so that we can cleanly dispose of subprocess resources if 
 		#there are any.
