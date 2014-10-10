@@ -26,6 +26,10 @@ def run_momo():
 	root['Simulator'] = Simulator
 
 	line = sys.argv[1:]
+	interactive = False
+	if len(line) > 0 and line[0] == '-i':
+		interactive = True
+		line = line[1:]
 	finished = False
 	contexts = [root]
 
@@ -50,8 +54,8 @@ def run_momo():
 	readline.parse_and_bind("tab: complete")
 	readline.set_completer(complete)
 
-	#If we ended the initial command with a context, start a shell
-	if not finished:
+	#If we're in "interactive" mode and ended the initial command with a context, start a shell
+	if interactive and not finished:
 		try:
 			while True:
 				linebuf = raw_input("(%s) " % annotate.context_name(contexts[-1]))
