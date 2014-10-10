@@ -33,6 +33,7 @@ def run_momo():
 		while len(line) > 0:
 			line, finished = shell.invoke(contexts, line)
 	except MoMoException as e:
+		finished = True
 		print e.format()
 
 	#Setup file path and function name completion
