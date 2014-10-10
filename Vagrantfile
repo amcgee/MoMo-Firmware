@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	    vb.customize ['usbfilter', 'add', '0', '--target', :id, '--name', 'MoMoFSU', '--vendorid', '0x0403', '--productid', '0x6015']
 	  end
 
-	  momo.vm.network "forwarded_port", guest: 80, host: 1111
+	  momo.vm.network "forwarded_port", guest: 3000, host: 1111
 
 	  momo.vm.provision "shell", path: "tools/automation/provision.sh"
 	end

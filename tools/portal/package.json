@@ -1,0 +1,19 @@
+{
+  "name": "MoMo-Portal",
+  "version": "0.1.0",
+  "description": "MoMo web-based control panel",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/forever/bin/forever start -w -m 5 ./index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "momo"
+  ],
+  "author": "WellDone International",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.9.7",
+    "forever": "^0.11.1"
+  }
+}

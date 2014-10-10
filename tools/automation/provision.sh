@@ -81,4 +81,17 @@ echo "Adding MoMo tool bin ($MOMOROOT/tools/bin) to the path..."
 echo "PATH=\"\$PATH:$MOMOROOT/tools/bin\"" >> $HOME/.profile
 echo "DONE!"
 
+echo "Installing Node and NPM..."
+apt-get install -y python-software-properties python g++ make
+add-apt-repository -y ppa:chris-lea/node.js
+apt-get update
+apt-get install -y nodejs
+
+echo "FOREVER_ROOT=/etc/forever" >> $HOME/.profile
+cd $MOMOROOT/tools/portal
+npm install
+FOREVER_ROOT=/etc/forever npm start
+
+echo "DONE!"
+
 exit 0
