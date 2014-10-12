@@ -36,9 +36,14 @@ def run_momo():
 	try:
 		while len(line) > 0:
 			line, finished = shell.invoke(contexts, line)
+			first_cmd = False
 	except MoMoException as e:
 		finished = True
 		print e.format()
+
+		#if the command passed on the command line fails, then we should
+		#just exit rather than drop the user into a shell.
+		sys.exit(1)
 
 	#Setup file path and function name completion
 	import readline, glob
