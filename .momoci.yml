@@ -1,6 +1,5 @@
 setup:
-- vagrant up
+- echo "SETUP COMPLETE"
 build:
-- vagrant ssh -c "cd /vagrant && ./tools/automation/build_all.sh"
-teardown:
-- vagrant destroy -f
+- cd /vagrant
+- ./tools/automation/build_all.sh
