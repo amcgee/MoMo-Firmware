@@ -30,6 +30,29 @@ void gsm_rpc_setcommdestination()
 	bus_slave_setreturn(pack_return_status(0,0));
 }
 
+bool gsm_preparestream() // Run in mainline code
+{
+	if ( comm_destination[0] == '+' )
+ 	{
+ 		state.stream_type = kStreamSMS;
+ 		if ( !sms_prepare( comm_destination, strlen(comm_destination) ) )
+ 		{
+ 			return false;
+ 		}
+ 	}
+ 	else
+ 	{	
+ 		state.stream_type = kStreamGPRS;
+ 		if ( !gprs_connect()
+ 			|| !http_init()
+ 			|| !http_write_prepare( plist_get_int16(0) ) )
+ 		{
+ 			return false;
+ 		}
+ 	}
+ 	return true;
+}
+
  void gsm_openstream()
  {
  	if (!gsm_on())
@@ -50,42 +73,9 @@ void gsm_rpc_setcommdestination()
  		return;
  	}
  	state.stream_in_progress = 1;
+ 	state.connecting = 1;
 
- 	if ( gsm_register( 60 ) )
- 	{
- 		if ( comm_destination[0] == '+' )
-	 	{
-	 		state.stream_type = kStreamSMS;
-	 		if ( !sms_prepare( comm_destination, strlen(comm_destination) ) )
-	 		{
-	 			state.stream_in_progress = 0;
-	 		}
-	 	}
-	 	else
-	 	{	
-	 		state.stream_type = kStreamGPRS;
-	 		if ( !gprs_connect()
-	 			|| !http_init()
-	 			|| !http_write_prepare( plist_get_int16(0) ) )
-	 		{
-	 			state.stream_in_progress = 0;
-	 		}
-	 	}
- 	}
- 	else
- 	{
- 		state.stream_in_progress = 0;
- 	}
-
- 	if ( state.stream_in_progress == 0 )
- 	{
- 		gsm_off();
-		bus_slave_setreturn( pack_return_status(6, 0) );
- 	}
- 	else
- 	{
- 		bus_slave_setreturn(pack_return_status(0,0));
- 	}
+ 	bus_slave_setreturn(pack_return_status(0,0));
  }
 
  void gsm_putstream()

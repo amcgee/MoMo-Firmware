@@ -15,12 +15,16 @@
 #include "intel_hex.h"
 #include <string.h>
 
-static void report_result(bool success)
+static void stream_callback()
 {
 	bus_master_begin_rpc();
-	mib_packet.param_spec = plist_empty();
+	mib_packet.param_spec = plist_no_buffer(2);
 	mib_packet.feature = 60;
-	mib_packet.command = ( success )? 0xF0 : 0xF1;
+	mib_packet.command = 0xF0;
+
+	((uint16*)mib_buffer)[0] = state.stream_progress;
+	((uint16*)mib_buffer)[1] = state.stream_error;
+
 	bus_master_send_rpc(8);
 }
 
@@ -38,17 +42,48 @@ static void capture_error(void)
 extern char* uint_buf;
 void task(void)
 {
+	uint8 result, timeout_10s = 8*6; // 8 minutes
 	wdt_disable();
 	
 	//Don't sleep while the module's on so that we don't miss a
 	//serial message
 	while(state.module_on)
 	{
+
 		gsm_rx();
 
-		if ( state.shutdown_pending )
+		switch ( state.stream_state )
 		{
-			uint8 result, timeout_10s = 8*6; // 8 minutes
+		case kStreamSearchingForNetwork:
+			if ( gsm_register(10) )
+			{
+				state.stream_state = kStreamConnecting;
+			}
+			else if ( timeout_10s > 0)
+			{
+				--timeout_10s;
+			}
+			else
+			{
+				gsm_off();
+				capture_error();
+				state.stream_state = kStreamError;
+			}
+			state.stream_state = kStreamConnecting;
+			break;
+		case kStreamConnecting:
+			if ( !gsm_preparestream() )
+			{
+				state.stream_state = kStreamError;
+				gsm_off();
+				stream_callback( state.stream_type == kStreamSMS
+				                   ? kStreamErrorSMSPrepare
+				                   : kStreamErrorGPRSPrepare );
+				break;
+			}
+			state.stream_state = kStreamReady;
+			break;
+		case kStreamTransmitting:
 			if ( state.stream_type == kStreamSMS )
 			{
 				gsm_expect( "+CMGS:" );
@@ -74,7 +109,13 @@ void task(void)
 				result = ( ( result && http_status() == 200 )? 1 : 2 );
 			}
 
-			report_result( result == 1 );
+			state.stream_state = (result == 1) ? kStreamSuccess : kStreamError;
+			send_callback( state.stream_state
+			             , state.stream_type == kStreamSMS
+			                 ? kStreamErrorSMSSend
+			                 : ( result
+			                 	   ? kStreamErrorHTTPNot200
+			                 	   : kStreamErrorGPRSSend ) );
 			if ( result == 2 && state.stream_type == kStreamSMS )
 			{
 				capture_error();
@@ -89,8 +130,8 @@ void task(void)
 				bus_master_send_rpc( 8 );
 			}
 			gsm_off();
+			break;
 		}
-	}
 }
 
 void interrupt_handler(void)

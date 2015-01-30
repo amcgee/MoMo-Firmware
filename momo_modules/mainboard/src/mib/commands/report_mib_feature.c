@@ -152,14 +152,22 @@ static void clear_report_log_mib(void)
 	report_log_clear();
 }
 
-static void handle_report_stream_success(void)
+static void report_stream_callback(void)
 {
-	notify_report_success();
-}
-
-static void handle_report_stream_failure(void)
-{
-	notify_report_failure();
+	switch ( plist_get_int16(0) ) {
+		case 0:
+			//pending
+			break;
+		case 1:
+			//ready
+			break;
+		case 2:
+			notify_report_success();
+			break;
+		case 3:
+			notify_report_failure();
+			break;		
+	}
 }
 
 DEFINE_MIB_FEATURE_COMMANDS(reporting) {
@@ -184,7 +192,6 @@ DEFINE_MIB_FEATURE_COMMANDS(reporting) {
 	{ 0x12, init_report_config, plist_spec_empty() },
 	{ 0x13, set_reporting_apn, plist_spec(0,true) },
 	{ 0x14, get_reporting_apn, plist_spec_empty() },
-	{ 0xF0, handle_report_stream_success, plist_spec_empty() },
-	{ 0xF1, handle_report_stream_failure, plist_spec_empty() }
+	{ 0xF0, report_stream_callback, plist_spec(1,true) }
 };
 DEFINE_MIB_FEATURE(reporting);
