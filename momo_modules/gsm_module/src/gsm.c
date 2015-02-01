@@ -24,8 +24,9 @@ bool gsm_on()
 		gsm_module_off();
 		return false;
 	}
-
 	gsm_rx_clear();
+	__delay_ms(1000);
+
 	return true;
 }
 
@@ -41,8 +42,10 @@ bool gsm_register( uint8 timeout_s )
 }
 bool gsm_registered()
 {
-	gsm_expect( "+CREG: 0,1" );
-	return gsm_cmd_raw( "AT+CREG?", kDEFAULT_CMD_TIMEOUT ) == 1;
+	gsm_expect( "+CREG: 0,1" ); // Registered, home network
+	gsm_expect2( "+CREG: 0,5" ); // Registered, roaming
+	uint8 result = gsm_cmd_raw( "AT+CREG?", kDEFAULT_CMD_TIMEOUT );
+	return result == 1 || result == 2;
 }
 uint8 gsm_cmd(const char* cmd)
 {

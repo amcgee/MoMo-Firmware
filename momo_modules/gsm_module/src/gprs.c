@@ -25,14 +25,9 @@ bool gprs_connect()
 	gsm_cmd( "AT+SAPBR=3,1,\"Contype\",\"GPRS\"" );
 	__delay_ms(100);
 	
-	uint8 retry_count = 4;
-	do
-	{
-		if ( gsm_cmd( "AT+SAPBR=1,1" ) == 1 )
-			return true;
+	if ( gsm_cmd( "AT+SAPBR=1,1" ) == 1 )
+		return true;
 
-		__delay_ms(5000);
-	} while ( retry_count-- > 0 );
 	return false;
 }
 bool gprs_connected()

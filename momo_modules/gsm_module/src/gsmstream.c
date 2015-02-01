@@ -20,6 +20,11 @@
 
 char comm_destination[65] = { '\0' };
 
+void gsm_setupstream()
+{
+
+}
+
 void gsm_rpc_setcommdestination()
 {
 	if ( plist_get_int8(0) + mib_buffer_length() > 64 )
@@ -30,23 +35,25 @@ void gsm_rpc_setcommdestination()
 	bus_slave_setreturn(pack_return_status(0,0));
 }
 
-bool gsm_preparestream() // Run in mainline code
+bool gsm_stream_prepare() // Run in mainline code
 {
 	if ( comm_destination[0] == '+' )
  	{
  		state.stream_type = kStreamSMS;
  		if ( !sms_prepare( comm_destination, strlen(comm_destination) ) )
  		{
+ 			state.stream_error = kStreamErrorSMSPrepare;
  			return false;
  		}
  	}
  	else
- 	{	
+ 	{
  		state.stream_type = kStreamGPRS;
  		if ( !gprs_connect()
  			|| !http_init()
  			|| !http_write_prepare( plist_get_int16(0) ) )
  		{
+ 			state.stream_error = kStreamErrorGPRSPrepare;
  			return false;
  		}
  	}
@@ -55,9 +62,9 @@ bool gsm_preparestream() // Run in mainline code
 
  void gsm_openstream()
  {
- 	if (!gsm_on())
+ 	if ( state.stream_state != kStreamIdle )
  	{
- 		bus_slave_setreturn(pack_return_status(6,0));
+ 		bus_slave_setreturn(pack_return_status(7,0)); //TODO: Busy MIB status code
  		return;
  	}
 
@@ -67,14 +74,7 @@ bool gsm_preparestream() // Run in mainline code
  		return;
  	}
 
- 	if ( state.stream_in_progress )
- 	{
- 		bus_slave_setreturn(pack_return_status(7,0)); //TODO: Busy MIB status code
- 		return;
- 	}
- 	state.stream_in_progress = 1;
- 	state.connecting = 1;
-
+ 	state.stream_state = kStreamConnecting;
  	bus_slave_setreturn(pack_return_status(0,0));
  }
 
