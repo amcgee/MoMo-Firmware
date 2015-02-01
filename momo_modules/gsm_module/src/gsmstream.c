@@ -42,7 +42,7 @@ bool gsm_stream_prepare() // Run in mainline code
  		state.stream_type = kStreamSMS;
  		if ( !sms_prepare( comm_destination, strlen(comm_destination) ) )
  		{
- 			state.stream_error = kStreamErrorSMSPrepare;
+ 			state.stream_error = kStreamErrorPrepare;
  			return false;
  		}
  	}
@@ -53,7 +53,7 @@ bool gsm_stream_prepare() // Run in mainline code
  			|| !http_init()
  			|| !http_write_prepare( plist_get_int16(0) ) )
  		{
- 			state.stream_error = kStreamErrorGPRSPrepare;
+ 			state.stream_error = kStreamErrorPrepare;
  			return false;
  		}
  	}
@@ -74,13 +74,14 @@ bool gsm_stream_prepare() // Run in mainline code
  		return;
  	}
 
+ 	state.streaming = 1;
  	state.stream_state = kStreamConnecting;
  	bus_slave_setreturn(pack_return_status(0,0));
  }
 
  void gsm_putstream()
  {
- 	if ( !state.stream_in_progress )
+ 	if ( state.stream_state != kStreamReady )
  	{
  		bus_slave_setreturn(pack_return_status(7,0));
  		return;
@@ -93,31 +94,69 @@ bool gsm_stream_prepare() // Run in mainline code
 
  void gsm_closestream()
  {
- 	
- 	state.stream_in_progress = 0; //TODO: Prevent new streams until the message has actually sent?
-
 	if ( state.stream_type == kStreamSMS )
 	{
 		if ( sms_send() )
 	 		gsm_off();
 	 	else
-	 		state.shutdown_pending = 1;  // Shutdown the module after we've sent the message (or timed out)
+	 		state.stream_state = kStreamTransmitting;  // Shutdown the module after we've sent the message (or timed out)
 	 	bus_slave_setreturn(pack_return_status(0,0));
 	}
 	else
 	{
 		if ( !http_post(comm_destination) )
 		{
+			state.streaming = 0;
+			state.stream_state = kStreamIdle;
 			gsm_off();
 			bus_slave_setreturn(pack_return_status(6,0));
 		}
 		else
 		{
-			state.shutdown_pending = 1;
+			state.stream_state = kStreamTransmitting;
 			bus_slave_setreturn(pack_return_status(0,0));
 		}
 	}
  }
+
+bool gsm_stream_confirm( uint8 timeout )
+{
+	if ( state.stream_type == kStreamSMS )
+	{
+		gsm_expect( "+CMGS:" );
+		gsm_expect2( "ERROR" );
+
+		if ( gsm_await( timeout ) == 1 ) {
+			state.stream_error = kStreamErrorNone;
+			return true;
+		}
+		else
+		{
+			state.stream_error = kStreamErrorSend;
+			return false;
+		}
+	}
+	else
+	{
+		if ( http_await_response( timeout ) ) {
+			if ( http_status() == 200 )
+			{
+				state.stream_error = kStreamErrorNone;	
+				return true;
+			}
+			else
+			{
+				state.stream_error = kStreamErrorHTTPNot200;
+				return false;
+			}
+		}
+		else
+		{
+			state.stream_error = kStreamErrorSend;
+			return false;
+		}
+	}
+}
 
  void gsm_abandonstream()
  {

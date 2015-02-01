@@ -9,7 +9,7 @@ typedef enum {
 } StreamState;
 
 typedef enum {
-	kStreamErrorNone       = 0
+	kStreamErrorNone       = 0,
 	kStreamErrorNetwork    = 1,
 	kStreamErrorPrepare    = 2,
 	kStreamErrorSend       = 3,
@@ -48,6 +48,8 @@ prefix uint8 rx_buffer_start;
 prefix uint8 rx_buffer_end;
 prefix uint8 rx_buffer_len;
 prefix uint8 debug_val;
+
+prefix uint8 stream_id;
 
 //GSM Module Status
 prefix ModuleState state;

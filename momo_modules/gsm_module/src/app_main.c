@@ -11,8 +11,8 @@
 #include "http.h"
 #include "simcard.h"
 #include "global_state.h"
+#include "gsmstream.h"
 #include "port.h"
-#include "intel_hex.h"
 #include <string.h>
 
 static void stream_callback()
@@ -31,22 +31,22 @@ static void stream_callback()
 	bus_master_send_rpc(8);
 }
 
-static void capture_error(void)
-{
-	uint8 len = gsm_read( mib_buffer, kBusMaxMessageSize );
-	if ( len == 0 )
-		return;
+// static void capture_error(void)
+// {
+// 	uint8 len = gsm_read( mib_buffer, kBusMaxMessageSize );
+// 	if ( len == 0 )
+// 		return;
 
-	bus_master_begin_rpc();
-	bus_master_prepare_rpc( 42, 0x20, plist_with_buffer( 0, len ) );
-	bus_master_send_rpc( 8 );
-}
+// 	bus_master_begin_rpc();
+// 	bus_master_prepare_rpc( 42, 0x20, plist_with_buffer( 0, len ) );
+// 	bus_master_send_rpc( 8 );
+// }
 
-char sticky_band[20];
+char sticky_band[21];
 extern char* uint_buf;
 void task(void)
 {
-	uint8 result, counter; // 8 minutes
+	uint8 counter;
 	wdt_disable();
 	
 	//Don't sleep while the module's on so that we don't miss a
@@ -63,11 +63,27 @@ void task(void)
 				if ( !gsm_on() )
 					continue;
 
+				if ( sticky_band[0] != '\0' );
+				{
+					gsm_write_str("AT+CBAND=\"");
+					gsm_write_str(sticky_band);
+					if ( !gsm_cmd("\"") )
+					{
+						sticky_band[0] = '\0';
+						continue;
+					}
+				}
+
 				if ( gsm_register(120) )
 				{
 					// TODO save the current CBAND
-					// gsm_cmd("AT+CBAND?");
-					// sticky_band[0] = '\0';
+					gsm_expect( "+CBAND: " );
+					gsm_cmd_raw( "AT+CBAND?" , kDEFAULT_CMD_TIMEOUT );
+					sticky_band[ gsm_read( sticky_band, sizeof(sticky_band)-1 ) ] = '\0';
+					uint8 i = 0;
+					while ( sticky_band[i] != '\0' && sticky_band[i] != ',' || sticky_band[i] != '\r' )
+						continue;
+					sticky_band[i] = '\0';
 
 					if ( !state.streaming || gsm_stream_prepare() ) // state.stream_error set in here
 					{
@@ -81,12 +97,12 @@ void task(void)
 				}
 
 				gsm_off();
-			} while ( --counter > 0 )
+			} while ( --counter > 0 );
 
 			if ( counter == 0 )
 			{
+				state.stream_state = kStreamIdle;
 				gsm_off();
-				state.stream_state = kStreamError;
 			}
 			else
 			{
@@ -97,54 +113,15 @@ void task(void)
 			break;
 		case kStreamTransmitting:
 		 	counter = 8*6; // 8 minutes in 10 second intervals
-			if ( state.stream_type == kStreamSMS )
+			do
 			{
-				gsm_expect( "+CMGS:" );
-				gsm_expect2( "ERROR" );
-				do
-				{
-					result = gsm_await( 10 );
-					if ( result == 1 ) {
-						state.stream_state = kStreamSuccess;
-						break;
-					}
-					else if ( --counter == 0 )
-					{
-						state.stream_state = kStreamError;
-						state.stream_error = kStreamErrorSMSSend;
-						break;
-					}
-				}
-				while ( true );	
-			}
-			else
-			{
-				do
-				{
-					result = http_await_response( 10 );
-					if ( result ) {
-						if ( http_status() == 200 )
-						{
-							state.stream_state = kStreamSuccess;
-						}
-						else
-						{
-							state.stream_state = kStreamError;
-							state.stream_error = kStreamErrorHTTPNot200;
-						}
-						break;
-					}
-					else if ( --counter == 0 )
-					{
-						state.stream_state = kStreamError;
-						state.stream_error = kStreamErrorGPRSSend;
-						break;
-					}
-				}
-				while (true);
-			}
+				if ( gsm_stream_confirm( 10 ) )
+					break;
+			} while ( --counter > 0 );
 
-			send_callback();
+			state.stream_state = kStreamIdle;
+			state.streaming = 0;
+			stream_callback();
 			
 			// if ( result == 2 && state.stream_type == kStreamSMS )
 			// {
@@ -162,7 +139,8 @@ void task(void)
 			
 			gsm_off();
 			break;
-		}
+		};
+	}
 }
 
 void interrupt_handler(void)
@@ -183,6 +161,8 @@ void gsm_rpc_on()
 	
 	mib_buffer[0] = gsm_on();
 	mib_buffer[1] = 0;
+
+	state.stream_state = kStreamConnecting;
 
 	bus_slave_setreturn(pack_return_status(0,2));
 }
@@ -221,12 +201,13 @@ void gsm_rpc_dumpbuffer()
 void gsm_rpc_debug()
 {
 	mib_buffer[0] = state.module_on;
-	mib_buffer[1] = state.shutdown_pending;
-	mib_buffer[2] = rx_buffer_start;
-	mib_buffer[3] = rx_buffer_end;
-	mib_buffer[4] = debug_val;
+	mib_buffer[1] = state.stream_state;
+	mib_buffer[2] = state.stream_error;
+	mib_buffer[3] = rx_buffer_start;
+	mib_buffer[4] = rx_buffer_end;
+	mib_buffer[5] = debug_val;
 
-	bus_slave_setreturn(pack_return_status(0, 5));
+	bus_slave_setreturn(pack_return_status(0, 6));
 }
 
 void gsm_rpc_download()
@@ -269,7 +250,7 @@ void gsm_rpc_download()
 
 void gsm_rpc_sendcommand()
 {
-	if (state.module_on)
+	if (state.module_on && !state.streaming)
 	{
 		gsm_write( mib_buffer, mib_buffer_length() );
 		uint8 result = gsm_cmd( "" );
