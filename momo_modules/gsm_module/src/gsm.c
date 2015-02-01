@@ -5,8 +5,11 @@
 #include "global_state.h"
 #include "simcard.h"
 
+char sticky_band[21];
 void gsm_init()
 {
+	sticky_band[0] = '\0';
+
 	gsm_module_off();
 	simdet_idle();
 	gsm_rx_clear();
@@ -46,6 +49,33 @@ bool gsm_registered()
 	gsm_expect2( "+CREG: 0,5" ); // Registered, roaming
 	uint8 result = gsm_cmd_raw( "AT+CREG?", kDEFAULT_CMD_TIMEOUT );
 	return result == 1 || result == 2;
+}
+
+void gsm_remember_band()
+{
+	gsm_expect( "+CBAND: " );
+	gsm_cmd_raw( "AT+CBAND?" , kDEFAULT_CMD_TIMEOUT );
+	sticky_band[ gsm_read( sticky_band, sizeof(sticky_band)-1 ) ] = '\0';
+	uint8 i = 0;
+	while ( sticky_band[i] != '\0' && sticky_band[i] != ',' || sticky_band[i] != '\r' )
+		continue;
+	sticky_band[i] = '\0';
+}
+void gsm_recall_band()
+{
+	if ( sticky_band[0] != '\0' );
+	{
+		gsm_write_str("AT+CBAND=\"");
+		gsm_write_str(sticky_band);
+		if ( !gsm_cmd("\"") )
+		{
+			sticky_band[0] = '\0';
+		}
+	}
+}
+void gsm_forget_band()
+{
+	sticky_band[0] = '\0';
 }
 uint8 gsm_cmd(const char* cmd)
 {

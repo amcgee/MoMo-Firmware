@@ -42,8 +42,7 @@ static void stream_callback()
 // 	bus_master_send_rpc( 8 );
 // }
 
-char sticky_band[21];
-extern char* uint_buf;
+// extern char* uint_buf;
 void task(void)
 {
 	uint8 counter;
@@ -62,29 +61,11 @@ void task(void)
 			do {
 				if ( !gsm_on() )
 					continue;
+				gsm_recall_band();
 
-				if ( sticky_band[0] != '\0' );
+				if ( gsm_register(120) ) // Is 2 minutes long enough??
 				{
-					gsm_write_str("AT+CBAND=\"");
-					gsm_write_str(sticky_band);
-					if ( !gsm_cmd("\"") )
-					{
-						sticky_band[0] = '\0';
-						continue;
-					}
-				}
-
-				if ( gsm_register(120) )
-				{
-					// TODO save the current CBAND
-					gsm_expect( "+CBAND: " );
-					gsm_cmd_raw( "AT+CBAND?" , kDEFAULT_CMD_TIMEOUT );
-					sticky_band[ gsm_read( sticky_band, sizeof(sticky_band)-1 ) ] = '\0';
-					uint8 i = 0;
-					while ( sticky_band[i] != '\0' && sticky_band[i] != ',' || sticky_band[i] != '\r' )
-						continue;
-					sticky_band[i] = '\0';
-
+					gsm_remember_band();
 					if ( !state.streaming || gsm_stream_prepare() ) // state.stream_error set in here
 					{
 						break;
@@ -93,7 +74,7 @@ void task(void)
 				else
 				{
 					state.stream_error = kStreamErrorNetwork;
-					sticky_band[0] = '\0'; // registration failed: forget the band, try again.
+					gsm_forget_band(); // registration failed: forget the band, try again.
 				}
 
 				gsm_off();
