@@ -66,7 +66,18 @@ void task(void)
 				if ( gsm_register(120) ) // Is 2 minutes long enough??
 				{
 					gsm_remember_band();
-					if ( !state.streaming || gsm_stream_prepare() ) // state.stream_error set in here
+					if ( state.streaming )
+					{
+						if ( !gsm_stream_prepare() )
+						{
+							state.stream_error = kStreamErrorPrepare;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else
 					{
 						break;
 					}
@@ -97,7 +108,17 @@ void task(void)
 			do
 			{
 				if ( gsm_stream_confirm( 10 ) )
+				{
+					if ( state.stream_type == kStreamGPRS && http_status() != 200 )
+						state.stream_error = kStreamErrorHTTPNot200;
+					else
+						state.stream_error = kStreamErrorNone;
 					break;
+				}
+				else
+				{
+					state.stream_error = kStreamErrorSend;
+				}
 			} while ( --counter > 0 );
 
 			state.stream_state = kStreamIdle;

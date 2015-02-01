@@ -42,7 +42,6 @@ bool gsm_stream_prepare() // Run in mainline code
  		state.stream_type = kStreamSMS;
  		if ( !sms_prepare( comm_destination, strlen(comm_destination) ) )
  		{
- 			state.stream_error = kStreamErrorPrepare;
  			return false;
  		}
  	}
@@ -53,15 +52,14 @@ bool gsm_stream_prepare() // Run in mainline code
  			|| !http_init()
  			|| !http_write_prepare( plist_get_int16(0) ) )
  		{
- 			state.stream_error = kStreamErrorPrepare;
  			return false;
  		}
  	}
  	return true;
 }
 
- void gsm_openstream()
- {
+void gsm_openstream()
+{
  	if ( state.stream_state != kStreamIdle )
  	{
  		bus_slave_setreturn(pack_return_status(7,0)); //TODO: Busy MIB status code
@@ -77,11 +75,11 @@ bool gsm_stream_prepare() // Run in mainline code
  	state.streaming = 1;
  	state.stream_state = kStreamConnecting;
  	bus_slave_setreturn(pack_return_status(0,0));
- }
+}
 
- void gsm_putstream()
- {
- 	if ( state.stream_state != kStreamReady )
+void gsm_putstream()
+{
+ 	if ( state.stream_state != kStreamReady || !state.streaming )
  	{
  		bus_slave_setreturn(pack_return_status(7,0));
  		return;
@@ -90,10 +88,16 @@ bool gsm_stream_prepare() // Run in mainline code
  	gsm_write( mib_buffer, mib_buffer_length() );
 
  	bus_slave_setreturn(pack_return_status(0,0));
- }
+}
 
- void gsm_closestream()
- {
+void gsm_closestream()
+{
+	if ( state.stream_state != kStreamReady || !state.streaming )
+ 	{
+ 		bus_slave_setreturn(pack_return_status(7,0));
+ 		return;
+ 	}
+
 	if ( state.stream_type == kStreamSMS )
 	{
 		if ( sms_send() )
@@ -117,7 +121,7 @@ bool gsm_stream_prepare() // Run in mainline code
 			bus_slave_setreturn(pack_return_status(0,0));
 		}
 	}
- }
+}
 
 bool gsm_stream_confirm( uint8 timeout )
 {
@@ -127,32 +131,20 @@ bool gsm_stream_confirm( uint8 timeout )
 		gsm_expect2( "ERROR" );
 
 		if ( gsm_await( timeout ) == 1 ) {
-			state.stream_error = kStreamErrorNone;
 			return true;
 		}
 		else
 		{
-			state.stream_error = kStreamErrorSend;
 			return false;
 		}
 	}
 	else
 	{
 		if ( http_await_response( timeout ) ) {
-			if ( http_status() == 200 )
-			{
-				state.stream_error = kStreamErrorNone;	
-				return true;
-			}
-			else
-			{
-				state.stream_error = kStreamErrorHTTPNot200;
-				return false;
-			}
+			return true;
 		}
 		else
 		{
-			state.stream_error = kStreamErrorSend;
 			return false;
 		}
 	}

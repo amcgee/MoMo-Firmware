@@ -85,7 +85,11 @@ void do_stream( void* arg )
 		}
 		break;
 	case kStreamOpening:
-		stream->state = kStreamPushing;
+		stream->state = kStreamConnecting; // Wait for the "ready" callback
+		break;
+	case kStreamConnecting:
+		stream->state = kStreamPushing; // Received the "ready" callback
+		taskloop_add( do_stream, arg );
 		break;
 	case kStreamPushing:
 		if ( stream->data_len > 0 && stream->state_counter < stream->data_len )
@@ -109,9 +113,17 @@ void do_stream( void* arg )
 	}
 }
 
-void stream_callback( uint8 id, uint8 status )
+void stream_callback( uint8 id, uint8 status, uint8 error )
 {
 	StreamData* stream = &active_streams[id];
+	if ( status == 0 && stream->state = kStreamConnecting )
+	{
+		taskloop_add( do_stream, (void*) id );
+	}
+	else if ( status == 1 )
+	{
+		// We've succeeded or failed, do something
+	}
 }
 
 #define TOO_MANY_STREAMS 0xFF
