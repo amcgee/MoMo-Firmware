@@ -1,4 +1,7 @@
 #include "global_state.h"
+#include "gsm_defines.h"
+#include "gsm.h"
+#include "gsm_serial.h"
 #include "mib12_api.h"
 #include "protocol.h"
 #include "watchdog.h"
@@ -53,8 +56,8 @@ void gsm_rpc_dumpbuffer()
 void gsm_rpc_debug()
 {
 	mib_buffer[0] = state.module_on;
-	mib_buffer[1] = state.stream_state;
-	mib_buffer[2] = state.stream_error;
+	mib_buffer[1] = state.tx_state;
+	mib_buffer[2] = state.tx_error;
 	mib_buffer[3] = rx_buffer_start;
 	mib_buffer[4] = rx_buffer_end;
 	mib_buffer[5] = debug_val;
@@ -62,9 +65,15 @@ void gsm_rpc_debug()
 	bus_slave_setreturn(pack_return_status(0, 6));
 }
 
+void gsm_rpc_download()
+{
+	
+}
+
 void gsm_rpc_sendcommand()
 {
-	if (state.module_on && !state.streaming)
+	// When we're in the "ready" state we don't want to accidentally transmit this command.
+	if (state.module_on && state.tx_state != kTxReady )
 	{
 		gsm_write( mib_buffer, mib_buffer_length() );
 		uint8 result = gsm_cmd( "" );

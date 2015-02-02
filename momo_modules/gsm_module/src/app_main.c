@@ -12,7 +12,6 @@
 
 void task(void)
 {
-	uint8 counter;
 	wdt_disable();
 	
 	//Don't sleep while the module's on so that we don't miss a

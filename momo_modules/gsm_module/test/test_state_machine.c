@@ -1,7 +1,6 @@
 //Name: test_state_machine_c
 //Targets: all
 //Type: application
-//Patch: 
 //Description: Test to make sure that the expected functions are working
 //when called from c
 

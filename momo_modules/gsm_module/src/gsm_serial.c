@@ -7,7 +7,6 @@
 #include "gsm_defines.h"
 #include "gsm_module.h"
 #include "timer1.h"
-#include <string.h>
 
 void gsm_serial_init()
 {
@@ -209,5 +208,6 @@ void gsm_write(const char* buf, uint8 len)
 }
 void gsm_write_str(const char* str)
 {
-	gsm_write( str, strlen( str ) );
+	while ( *str != '\0' )
+		gsm_write_char( *(str++) );
 }

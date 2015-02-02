@@ -9,11 +9,12 @@
 #include "gsmstream.h"
 
 #include "mib12_api.h"
+#include "gsm_serial.h"
 #include "global_state.h"
 #include "gsm_tx.h"
 #include <string.h>
 
-char comm_destination[65] = { '\0' };
+char comm_destination[64] = { '\0' };
 
 void gsm_rpc_setcommdestination()
 {
@@ -27,7 +28,7 @@ void gsm_rpc_setcommdestination()
 
 void gsm_openstream()
 {
- 	if ( state.tx_state != kTxIdle 
+ 	if ( state.tx_state != kTxIdle
  		|| comm_destination[0] == '\0' )
  	{
  		bus_slave_setreturn(pack_return_status(7,0)); //TODO: Busy MIB status code

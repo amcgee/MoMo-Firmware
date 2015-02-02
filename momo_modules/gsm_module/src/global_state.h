@@ -1,3 +1,5 @@
+#ifndef __global_state_h__
+#define __global_state_h__
 
 #include "platform.h"
 
@@ -54,3 +56,5 @@ prefix uint8 stream_id;
 
 //GSM Module Status
 prefix ModuleState state;
+
+#endif

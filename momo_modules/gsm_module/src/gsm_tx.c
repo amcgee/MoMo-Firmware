@@ -1,11 +1,14 @@
 #include "gsm_tx.h"
 #include "gsm.h"
+#include "gsm_serial.h"
 #include "gsmstream.h"
 #include "global_state.h"
 #include "mib12_api.h"
+#include "sms.h"
 #include "gprs.h"
 #include "http.h"
 #include "simcard.h"
+#include <string.h>
 
 extern char* comm_destination; // TODO: factor better
 static void transmit_callback()
@@ -23,35 +26,9 @@ static void transmit_callback()
 	bus_master_send_rpc(8);
 }
 
-static bool tx_connect()
-{
-	if ( !gsm_on() )
-		return false;
-
-	if ( gsm_register(120) ) // Is 2 minutes long enough??
-	{
-		gsm_remember_band();
-		if ( !tx_prepare() )
-		{
-			state.stream_error = kTxErrorPrepare;
-		}
-		else
-		{
-			return true;
-		}
-	}
-	else
-	{
-		state.stream_error = kTxErrorNetwork;
-		gsm_forget_band(); // registration failed: forget the band, try again.
-	}
-
-	gsm_off();
-	return false;
-}
 static bool tx_prepare()
 {
-	if ( state.tx_type = kStreamSMS )
+	if ( state.tx_type == kTxSMS )
  	{
  		if ( !sms_prepare( comm_destination, strlen(comm_destination) ) )
  		{
@@ -68,6 +45,32 @@ static bool tx_prepare()
  		}
  	}
  	return true;
+}
+static bool tx_connect()
+{
+	if ( !gsm_on() )
+		return false;
+
+	if ( gsm_register(120) ) // Is 2 minutes long enough??
+	{
+		gsm_remember_band();
+		if ( !tx_prepare() )
+		{
+			state.tx_error = kTxErrorPrepare;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else
+	{
+		state.tx_error = kTxErrorNetwork;
+		gsm_forget_band(); // registration failed: forget the band, try again.
+	}
+
+	gsm_off();
+	return false;
 }
 
 static bool tx_confirm()
@@ -93,7 +96,7 @@ static bool tx_confirm()
 			if ( http_status() != 200 )
 			{
 				state.tx_error = kTxErrorHTTPNot200;
-				return false
+				return false;
 			}
 			return true;
 		}
@@ -127,13 +130,14 @@ bool gsm_tx_start( TransmissionType type )
 
 	state.tx_type = type;
  	state.tx_state = kTxConnecting;
- 	state.tx_error = kTxUnknown; // Fail unless we explicitly succeed
+ 	state.tx_error = kTxErrorUnknown; // Fail unless we explicitly succeed
  	return true;
 }
 
 // Process state machine transition.  Run in the main task loop.
 void gsm_tx_iterate()
 {
+	uint8 counter;
 	if ( state.tx_state == kTxIdle )
 		return;
 
@@ -157,7 +161,7 @@ void gsm_tx_iterate()
 				continue;
 
 			if ( counter > 0 )
-				state.stream_error = kTxErrorNone; // The only explicit success condition
+				state.tx_error = kTxErrorNone; // The only explicit success condition
 
 			state.tx_state = kTxIdle;
 			transmit_callback();

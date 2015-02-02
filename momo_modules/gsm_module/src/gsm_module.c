@@ -20,9 +20,8 @@ void gsm_module_off()
 	ANALOG_IF_POSSIBLE(GSMRESETPIN);
 
 	state.module_on = 0;
-	state.streaming = 0;
-	state.stream_state = kStreamIdle;
-	state.stream_error = kStreamErrorNone;
+	state.tx_state = kTxIdle;
+	state.tx_error = kTxErrorUnknown;
 }
 
 uint8 gsm_module_on()
