@@ -30,6 +30,8 @@ bool gsm_on()
 	gsm_rx_clear();
 	__delay_ms(1000);
 
+	gsm_recall_band();
+
 	return true;
 }
 

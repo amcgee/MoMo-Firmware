@@ -2,20 +2,25 @@
 #include "platform.h"
 
 typedef enum {
-	kStreamIdle = 0,
-	kStreamConnecting = 1,
-	kStreamReady = 2,
-	kStreamTransmitting = 3
-} StreamState;
+	kTxIdle = 0,
+	kTxConnecting = 1,
+	kTxReady = 2,
+	kTxSending = 3
+} TransmissionState;
 
 typedef enum {
-	kStreamErrorNone       = 0,
-	kStreamErrorNetwork    = 1,
-	kStreamErrorPrepare    = 2,
-	kStreamErrorSend       = 3,
-	kStreamErrorHTTPNot200 = 4,
-	kStreamErrorUnknown    = 5
-} StreamErrorCode;
+	kTxErrorNone       = 0,
+	kTxErrorNetwork    = 1,
+	kTxErrorPrepare    = 2,
+	kTxErrorSend       = 3,
+	kTxErrorHTTPNot200 = 4,
+	kTxErrorUnknown    = 5
+} TransmissionError;
+
+typedef enum {
+	kTxSMS = 0,
+	kTxHTTP = 1
+} TransmissionType;
 
 //Global State Types
 typedef union 
@@ -23,17 +28,13 @@ typedef union
 	struct
 	{
 		volatile uint8 module_on:1;
-		volatile uint8 streaming:1;
-		volatile uint8 stream_type:1;
-		volatile uint8 stream_state:2;
-		volatile uint8 stream_error:3;
+		volatile uint8 tx_type:1;
+		volatile uint8 tx_state:2;
+		volatile uint8 tx_error:3;
 	};
 
 	volatile uint8 gsm_state;
 } ModuleState;
-
-#define kStreamSMS 0
-#define kStreamGPRS 1
 
 #ifndef DEFINE_STATE
 #define prefix extern
