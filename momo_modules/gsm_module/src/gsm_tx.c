@@ -8,7 +8,6 @@
 #include "gprs.h"
 #include "http.h"
 #include "simcard.h"
-#include <string.h>
 
 extern char* comm_destination; // TODO: factor better
 static void transmit_callback()
@@ -30,7 +29,11 @@ static bool tx_prepare()
 {
 	if ( state.tx_type == kTxSMS )
  	{
- 		if ( !sms_prepare( comm_destination, strlen(comm_destination) ) )
+ 		uint8 len = 0;
+ 		while ( comm_destination[len] != '\0' )
+ 			++len;
+
+ 		if ( !sms_prepare( comm_destination, len ) )
  		{
  			return false;
  		}
