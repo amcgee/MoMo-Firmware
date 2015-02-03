@@ -10,6 +10,7 @@
 #include "simcard.h"
 #include "gsmstream.h"
 #include "port.h"
+#include "buffers.h"
 
 //MIB Endpoints
 void gsm_rpc_on()
@@ -58,8 +59,8 @@ void gsm_rpc_debug()
 	mib_buffer[0] = state.module_on;
 	mib_buffer[1] = state.tx_state;
 	mib_buffer[2] = state.tx_error;
-	// mib_buffer[3] = rx_buffer_start;
-	// mib_buffer[4] = rx_buffer_end;
+	mib_buffer[3] = rx_buffer_start;
+	mib_buffer[4] = rx_buffer_end;
 	mib_buffer[5] = debug_val;
 
 	bus_slave_setreturn(pack_return_status(0, 6));
