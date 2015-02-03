@@ -79,10 +79,10 @@ void gsm_forget_band()
 {
 	sticky_band[0] = '\0';
 }
+
 uint8 gsm_cmd(const char* cmd)
 {
-	gsm_expect( "OK" );
-	gsm_expect2( "ERROR" );
+	gsm_expect_ok_error();
 	gsm_write_str(cmd);
 	gsm_write_char('\r');
 	return gsm_await( kDEFAULT_CMD_TIMEOUT );

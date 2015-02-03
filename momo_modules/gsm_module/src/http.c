@@ -31,13 +31,14 @@ bool http_await_response( uint8 seconds ) {
 		return false;
 	gsm_rx(); // '1', '2', or '3'
 	gsm_rx(); // ','
-	while ( gsm_rx() )
+	while ( gsm_rx() && (ptr < (uint_buf+5)))
 	{
 		if ( gsm_rx_peek() == ',' )
 			break;
 		*(ptr++) = gsm_rx_peek();
 	}
-	while ( gsm_rx() )
+
+	while (gsm_rx())
 	{
 		if ( gsm_rx_peek() == '\r' )
 			break;
@@ -65,6 +66,7 @@ bool http_head(const char* url)
 		return false;
 	return true;
 }
+
 bool http_get(const char* url)
 {
 	http_read_start = 0;

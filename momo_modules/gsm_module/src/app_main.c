@@ -8,8 +8,6 @@
 #include "gsm.h"
 #include "gsm_tx.h"
 
-#include <string.h>
-
 void task(void)
 {
 	wdt_disable();
