@@ -47,8 +47,6 @@ typedef union
 //GSM Serial Communication Receive Buffer
 prefix uint8 debug_val;
 
-prefix uint8 stream_id;
-
 //GSM Module Status
 prefix ModuleState state;
 
