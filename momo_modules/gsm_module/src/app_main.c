@@ -11,15 +11,7 @@
 void task(void)
 {
 	wdt_disable();
-	
-	//Don't sleep while the module's on so that we don't miss a
-	//serial message
-	while(state.module_on)
-	{
-		gsm_tx_iterate();
-		gsm_rx();
-	}
-	gsm_tx_abandon(); // make sure everything is cleaned up
+	gsm_tx_run();
 }
 
 void interrupt_handler(void)

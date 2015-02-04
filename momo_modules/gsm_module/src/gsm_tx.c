@@ -127,8 +127,7 @@ static bool tx_confirm()
 bool gsm_tx_start( TransmissionType type )
 {
 	if ( state.tx_state != kTxIdle
-	  || !simdet_detect()
-	  || !gsm_on() )
+	  || !simdet_detect() )
 		return false;
 
 	state.tx_type = type;
@@ -186,6 +185,15 @@ void gsm_tx_iterate()
 			gsm_off();
 			break;
 		};
+}
+
+void gsm_tx_run() // Mainline loop
+{
+	while ( state.tx_state != kTxIdle )
+	{
+		gsm_tx_iterate();
+	}
+	gsm_tx_abandon(); // make sure everything is cleaned up
 }
 
 static bool tx_send()

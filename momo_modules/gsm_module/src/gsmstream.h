@@ -3,7 +3,8 @@
 
 #include "platform.h"
 
-void comm_set_destination( uint8, const char*, uint8 );
+uint8 set_comm_destination();
+char  comm_destination_get(uint8 offset);
 
 bool gsm_stream_prepare();
 bool gsm_stream_confirm( uint8 );
@@ -12,5 +13,7 @@ void gsm_openstream();
 void gsm_putstream();
 void gsm_closestream();
 void gsm_abandonstream();
+
+
 
 #endif

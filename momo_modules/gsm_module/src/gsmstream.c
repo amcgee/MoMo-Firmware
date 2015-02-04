@@ -14,16 +14,15 @@
 #include "gsm_tx.h"
 #include <string.h>
 
-char comm_destination[64] = { '\0' };
+//Defined in buffers.as
+extern char comm_destination[65];
 
 void gsm_rpc_setcommdestination()
 {
-	if ( plist_get_int8(0) + mib_buffer_length() > 64 )
+	if (set_comm_destination() == 1)
 		bus_slave_setreturn(pack_return_status(7,0));
-
-	memcpy( comm_destination + plist_get_int8(0), mib_buffer+2, mib_buffer_length() );
-	comm_destination[plist_get_int8(0) + mib_buffer_length()] = '\0';
-	bus_slave_setreturn(pack_return_status(0,0));
+	else
+		bus_slave_setreturn(pack_return_status(0,0));
 }
 
 void gsm_openstream()
