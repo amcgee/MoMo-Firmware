@@ -9,7 +9,9 @@
 #include "http.h"
 #include "simcard.h"
 
-extern char* comm_destination; // TODO: factor better
+//Defined in buffers.as
+extern char comm_destination[65]; // TODO: Factor better
+
 static void transmit_callback()
 {
 	//TODO: This should be optional
@@ -95,7 +97,7 @@ static bool tx_confirm()
 	}
 	else
 	{
-		if ( http_await_response( 10 ) ) {
+		if ( http_await_response() ) {
 			if ( http_status() != 200 )
 			{
 				state.tx_error = kTxErrorHTTPNot200;

@@ -14,9 +14,9 @@
 #include "gsm_tx.h"
 #include <string.h>
 
+
 //Defined in buffers.as
 extern char comm_destination[65];
-
 void gsm_rpc_setcommdestination()
 {
 	if (set_comm_destination() == 1)

@@ -7,7 +7,7 @@
 #define TX_CONFIRMATION_TIMEOUT 8*6
 
 bool gsm_tx_start( TransmissionType type );
-void gsm_tx_iterate();
+void gsm_tx_run();
 bool gsm_tx_finish();
 
 void gsm_tx_abandon();
