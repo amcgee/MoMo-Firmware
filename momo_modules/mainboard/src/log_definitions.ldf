@@ -23,6 +23,11 @@ ControllerResetNotice
 ControllerFactoryResetNotice
 "The MoMo controller is performing a factory reset"
 
+SanityCheckResetNotice
+"The regular sanity check failed, resetting."
+- "Expected Modules" as integer, format unsigned
+- "Attached Modules" as integer, format unsigned
+
 
 SubmoduleAddressRequestNotice
 "A submodule asked for an address"

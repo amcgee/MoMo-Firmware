@@ -13,6 +13,8 @@
 #include "pulse.h" 
 #include "alarm_repeat_times.h"
 
+#define _XTAL_FREQ			4000000
+
 MultiSensorState state;
 
 extern unsigned int adc_result;
@@ -73,6 +75,7 @@ void interrupt_handler(void)
 	if (ioc_flag_b(PULSE_IOC))
 	{
 		counter += 1;
+		__delay_ms(1); // Filter out high-frequency oscillations
 		ioc_flag_b(PULSE_IOC) = 0;
 	}
 }
