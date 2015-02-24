@@ -54,7 +54,7 @@ void task(void)
 		mib_buffer[3] = 0; //metadata
 
 		mib_buffer[4] = counter & 0xFF;
-		mib_buffer[5] = counter & 0xFF;
+		mib_buffer[5] = counter >> 8;
 		mib_buffer[6] = 0;
 		mib_buffer[7] = 0;
 
@@ -75,7 +75,7 @@ void interrupt_handler(void)
 	if (ioc_flag_b(PULSE_IOC))
 	{
 		counter += 1;
-		__delay_ms(1); // Filter out high-frequency oscillations
+		__delay_ms(10); // Filter out high-frequency oscillations
 		ioc_flag_b(PULSE_IOC) = 0;
 	}
 }
