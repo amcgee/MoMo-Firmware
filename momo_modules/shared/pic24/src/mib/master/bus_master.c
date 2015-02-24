@@ -2,6 +2,7 @@
 #include <string.h>
 #include "mib_state.h"
 #include "rpc_queue.h"
+#include "rtcc.h"
 
 //Local Prototypes that should not be called outside of this file
 static void		bus_master_finish();
@@ -11,6 +12,8 @@ void 			bus_master_readresult(unsigned int length);
 void 			bus_master_rpc_async_do();
 
 const rpc_info *master_rpcdata;
+
+rtcc_timestamp rpc_start_time;
 
 unsigned int bus_master_idle()
 {
@@ -33,6 +36,8 @@ static void bus_master_finish()
 	
 	if (mib_state.master_callback != NULL)
 		mib_state.master_callback( mib_unified.bus_returnstatus.result );
+
+	rpc_start_time = 0;
 }
 
 void bus_master_init()
@@ -76,6 +81,7 @@ void bus_master_sendrpc()
 		return;
 	}
 
+	rpc_start_time = rtcc_get_timestamp();
 	i2c_master_enable();
 
 	set_master_state(kMIBReadReturnStatus);
