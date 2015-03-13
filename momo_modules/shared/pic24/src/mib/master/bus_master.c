@@ -2,7 +2,6 @@
 #include <string.h>
 #include "mib_state.h"
 #include "rpc_queue.h"
-#include "rtcc.h"
 
 //Local Prototypes that should not be called outside of this file
 static void		bus_master_finish();
@@ -26,6 +25,7 @@ static void bus_master_finish()
 
 	//Set the flag that this RPC is done for whomever is waiting.
 	mib_state.rpc_done = 1;
+	rpc_start_time = 0;
 
 	if ( !rpc_queue_empty() )
 			taskloop_add_critical( bus_master_rpc_async_do, NULL );
@@ -36,13 +36,12 @@ static void bus_master_finish()
 	
 	if (mib_state.master_callback != NULL)
 		mib_state.master_callback( mib_unified.bus_returnstatus.result );
-
-	rpc_start_time = 0;
 }
 
 void bus_master_init()
 {
 	mib_state.rpc_done = 1;
+	rpc_start_time = 0;
 	rpc_queue_init();
 }
 
@@ -157,4 +156,9 @@ void bus_master_callback()
 			bus_master_finish();
 		break;
 	}
+}
+
+rtcc_timestamp bus_master_rpc_start_timestamp()
+{
+	return rpc_start_time;
 }

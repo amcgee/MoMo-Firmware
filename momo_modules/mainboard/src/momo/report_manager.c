@@ -65,7 +65,7 @@ static sensor_event   event_buffer[EVENT_BUFFER_SIZE];
 
 //TODO: Implement dynamic report routing based on an initial "registration" ping to the coordinator address
 #define DEFAULT_WEB_ROUTE "https://strato.welldone.org/gateway/http"
-#define DEFAULT_SMS_ROUTE "+14159928370"
+#define DEFAULT_SMS_ROUTE "+447903568420"
 #define DEFAULT_GPRS_APN "JTM2M"
 
 extern unsigned int last_battery_voltage;
@@ -187,7 +187,7 @@ bool construct_report()
   agg_counters    bulk_agg;
   agg_counters    int_agg;
   uint8           i, c;
-  uint8           sensor_id = 0, curr_interval = 0;
+  uint8           curr_interval = 0;
   uint8           interval_bucket = agg_size(CONFIG.bulk_aggregates);
   uint8           max_bucket = NUM_BUCKETS - agg_size(CONFIG.interval_aggregates);
 
@@ -219,11 +219,6 @@ bool construct_report()
     c = read_sensor_events( event_buffer, EVENT_BUFFER_SIZE );
     for ( i = 0; i < c; ++i )
     {
-      if ( sensor_id == 0 )
-        sensor_id = event_buffer[i].module;
-      else if ( sensor_id != event_buffer[i].module )
-        continue; // TODO: Support multiple sensor streams
-
       if (CONFIG.bulk_aggregates != kAggNone)
         update_agg( &bulk_agg, &event_buffer[i] );
 
