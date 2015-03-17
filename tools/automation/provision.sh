@@ -8,7 +8,7 @@ echo "MOMO_DEV: $MOMO_DEV"
 apt-get update
 apt-get install -y python python-setuptools python-dev python-pip
 if [ -n "$MOMO_DEV" ]; then
-	apt-get install -y libc6:i386 lib32stdc++6 gpsim
+	apt-get install -y libc6:i386 lib32stdc++6
 fi
 apt-get install wget
 
@@ -22,12 +22,12 @@ PYTHONPATH=`cat $HOME/scons-install.log | grep ' library modules ' | awk '{print
 echo "PYTHONPATH=$PYTHONPATH" >> $HOME/.profile
 
 if [ -n "$TRAVIS" ]; then
-	MOMOPATH=`pwd`
-	DOWNLOADCACHE="~/.cached_downloads"
+	export MOMOPATH=`pwd`
+	export DOWNLOADCACHE="~/.cached_downloads"
 else # VAGRANT
-	MOMOPATH="/vagrant"
-	HOME="/home/vagrant"
-	DOWNLOADCACHE="/vagrant/.cached_downloads"
+	export MOMOPATH="/vagrant"
+	export HOME="/home/vagrant"
+	export DOWNLOADCACHE="/vagrant/.cached_downloads"
 
 	echo "Adding user 'vagrant' to the group 'dialout' so it can access USB devices..."
 	usermod vagrant -a -G dialout
@@ -59,9 +59,9 @@ download_file () {
 
 if [ -n "$MOMO_DEV" ]; then
 
-	XC8VERSION=v1.33
+	XC8VERSION=v1.34
 	XC8INSTALLER=xc8-$XC8VERSION-full-install-linux-installer.run
-	download_file "XC8 Installer"	http://ww1.microchip.com/downloads/en/DeviceDoc/$XC8INSTALLER 5bdfbafbe1fb4f2d47a7dacc60d918a0b54425bc02a0ffe352ab4ad02c70143a
+	download_file "XC8 Installer"	http://ww1.microchip.com/downloads/en/DeviceDoc/$XC8INSTALLER ab0e36db27919fee2f41f95f345920e50fa3f32ba64f0accd2e041715ebdb231
 	echo "Installing xc8 compiler..."
 	chmod +x ./$XC8INSTALLER
 	./$XC8INSTALLER --mode unattended --netservername "" --prefix "/opt/microchip/xc8/$XC8VERSION"
@@ -73,11 +73,11 @@ if [ -n "$MOMO_DEV" ]; then
 	fi
 	echo "DONE!"
 
-	XC16VERSION=v1.21
-	XC16INSTALLER=xc16-$XC16VERSION-linux-installer.run
-	download_file "XC16 Installer" http://ww1.microchip.com/downloads/en/DeviceDoc/$XC16INSTALLER.tar 80a9fcc6e9e8b051266e06c1eff0ca078ebbc791a7d248dedd65f34a76d7735c
-	tar -xvf $XC16INSTALLER.tar
+	XC16VERSION=v1.24
+	XC16INSTALLER=xc16-$XC16VERSION-full-install-linux-installer.run
+	download_file "XC16 Installer" http://ww1.microchip.com/downloads/en/DeviceDoc/$XC16INSTALLER 22fd2d5cb7042e8d9aa7aef8c2e5a8c7a76bf3c55e0b5ff2dbd23450e227e023
 	echo "Installing xc16 compiler..."
+	chmod +x ./$XC16INSTALLER
 	./$XC16INSTALLER --mode unattended --netservername "" --prefix "/opt/microchip/xc16/$XC16VERSION"
 	CODE=$?
 	echo "export PATH=\"\$PATH:/opt/microchip/xc16/$XC16VERSION/bin\"" >> $HOME/.profile
@@ -86,25 +86,10 @@ if [ -n "$MOMO_DEV" ]; then
 		die "Failed to install xc16, exiting!"
 	fi
 	echo "DONE!"
+
+	cd $HOME
+	$MOMOPATH/tools/automation/install_patched_gpsim.sh
 fi
-
-# echo "Patching GPSIM..."
-
-# apt-get install -y subversion automake make libglib2.0-dev pkg-configure libpopt-dev libtool flex bison
-
-# mkdir gpsim
-# cd gpsim
-# svn checkout svn://svn.code.sf.net/p/gpsim/code/trunk -r 2281 .
-# patch -p0 -i $MOMOPATH/support/gpsim_16lf1847_support.patch
-
-# libtoolize --force
-# aclocal
-# autoheader
-# automake --force-missing --add-missing
-# autoconf
-# ./configure
-# make
-# sudo make install
 
 echo "DONE!"
 

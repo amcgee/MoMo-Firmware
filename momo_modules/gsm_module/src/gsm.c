@@ -37,8 +37,9 @@ bool gsm_on()
 	return true;
 }
 
-bool gsm_register( uint8 timeout_s )
+bool gsm_register()
 {
+	uint8 timeout_s = 240;
 	while ( !gsm_registered() )
 	{
 		if ( timeout_s-- == 0 )
@@ -60,9 +61,10 @@ bool gsm_registered()
 
 void gsm_remember_band()
 {
+	gsm_capture_remainder( sticky_band, sizeof(sticky_band) );
 	gsm_expect( "+CBAND: " );
 	gsm_cmd_raw( "AT+CBAND?" , kDEFAULT_CMD_TIMEOUT );
-	sticky_band[ gsm_read( sticky_band, sizeof(sticky_band)-1 ) ] = '\0';
+	
 	uint8 i = 0;
 	while ( sticky_band[i] != '\0' && sticky_band[i] != ',' && sticky_band[i] != '\r' && i++ < sizeof(sticky_band) )
 		continue;
@@ -82,7 +84,15 @@ void gsm_recall_band()
 }
 void gsm_forget_band()
 {
-	sticky_band[0] = '\0';
+	sticky_band[0] = 'A';
+	sticky_band[1] = 'L';
+	sticky_band[2] = 'L';
+	sticky_band[3] = '_';
+	sticky_band[4] = 'B';
+	sticky_band[5] = 'A';
+	sticky_band[6] = 'N';
+	sticky_band[7] = 'D';
+	sticky_band[8] = '\0';
 }
 
 uint8 gsm_cmd(const char* cmd)

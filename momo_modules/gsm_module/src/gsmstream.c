@@ -14,7 +14,6 @@
 #include "gsm_tx.h"
 #include <string.h>
 
-
 //Defined in buffers.as
 extern char comm_destination[65];
 void gsm_rpc_setcommdestination()
@@ -33,6 +32,8 @@ void gsm_openstream()
  		bus_slave_setreturn(pack_return_status(7,0)); //TODO: Busy MIB status code
  		return;
  	}
+
+ 	//TODO: Prioritize later streams by cancelling the current one?
  	
  	if ( !gsm_tx_start( comm_destination[0] == '+' ? kTxSMS : kTxHTTP ) )
  		bus_slave_setreturn(pack_return_status(6,0));
@@ -49,6 +50,8 @@ void gsm_putstream()
  	}
 
  	gsm_write( mib_buffer, mib_buffer_length() );
+ 	__delay_ms(1); //TODO: Needed?
+
  	bus_slave_setreturn(pack_return_status(0,0));
 }
 

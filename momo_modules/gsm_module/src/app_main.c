@@ -22,6 +22,7 @@ void interrupt_handler(void)
 void initialize(void)
 {	
 	debug_val = 0;
+	http_response_status = 0;
 	gsm_init();
 }
 
