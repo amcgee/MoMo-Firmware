@@ -13,6 +13,8 @@
 #include "pulse.h" 
 #include "alarm_repeat_times.h"
 
+#define _XTAL_FREQ			4000000
+
 MultiSensorState state;
 
 extern unsigned int adc_result;
@@ -36,7 +38,7 @@ void task(void)
 		++periods;
 	}
 
-	if (state.push_pending && (!state.push_disabled))
+	if (state.push_pending)
 	{
 		uint16_t average_flow = 0;
 		
