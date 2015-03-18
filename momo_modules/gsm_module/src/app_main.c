@@ -8,6 +8,7 @@
 #include "gsm.h"
 #include "gsm_tx.h"
 
+extern uint16 http_response_status;
 void task(void)
 {
 	wdt_disable();

@@ -14,6 +14,8 @@
 #include "gsm_tx.h"
 #include <string.h>
 
+#define _XTAL_FREQ			4000000
+
 //Defined in buffers.as
 extern char comm_destination[65];
 void gsm_rpc_setcommdestination()

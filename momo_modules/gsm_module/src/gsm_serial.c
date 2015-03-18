@@ -125,12 +125,6 @@ void gsm_capture_remainder( char* buf, uint8 max_len )
 		remainder_buffer_len = max_len;
 }
 
-void gsm_expect_ok_error()
-{
-	gsm_expect("OK");
-	gsm_expect2("ERROR");
-}
-
 uint8 gsm_await( uint8 timeout_s ) // NOTE: This function is time-sensitive
 {
 	reset_expected1_ptr();
