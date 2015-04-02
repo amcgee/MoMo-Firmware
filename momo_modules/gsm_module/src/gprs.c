@@ -13,6 +13,29 @@ void gsm_rpc_setapn()
 	bus_slave_setreturn(pack_return_status(0,0));
 }
 
+bool gprs_register()
+{
+	uint8 timeout_s = GPRS_REGISTRATION_TIMEOUT_S;
+	while ( !gsm_registered() )
+	{
+		if ( timeout_s-- == 0 )
+			return false;
+		__delay_ms( 1000 );
+	}
+	return true;
+}
+
+bool gprs_registered()
+{
+	gsm_expect( "+CREG: 0,1" ); // Registered, home network
+	gsm_expect2( "+CREG: 0,5" ); // Registered, roaming
+	uint8 result = gsm_cmd_raw( "AT+CGREG?", kDEFAULT_CMD_TIMEOUT );
+
+	__delay_ms(100);
+	
+	return result == 1 || result == 2;
+}
+
 bool gprs_connect()
 {
 	if ( gprs_connected() )
@@ -30,7 +53,7 @@ bool gprs_connect()
 	{
 		//Need to wait a longer time for this command because it can take > 3s to return
 		gsm_expect_ok_error();
-		if ( gsm_cmd_raw( "AT+SAPBR=1,1", GPRS_CONNECT_TIMEOUT) == 1)
+		if ( gsm_cmd_raw( "AT+SAPBR=1,1", GPRS_CONNECT_TIMEOUT_S) == 1)
 		{
 			//Make sure there's a guard band around the this command before sending any others
 			__delay_ms(100);

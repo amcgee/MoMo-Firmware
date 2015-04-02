@@ -14,8 +14,6 @@ extern char comm_destination[65]; // TODO: Factor better
 
 static void transmit_callback()
 {
-	//TODO: This should be optional
-
 	bus_master_begin_rpc();
 	mib_packet.param_spec = plist_no_buffer(2);
 	mib_packet.feature = 60;
@@ -42,7 +40,8 @@ static bool tx_prepare()
  	}
  	else
  	{
- 		if ( !gprs_connect()
+ 		if ( !gprs_register()
+ 			|| !gprs_connect()
  			|| !http_init()
  			|| !http_write_prepare( plist_get_int16(0) ) )
  		{
@@ -56,7 +55,7 @@ static bool tx_connect()
 	if ( !gsm_on() )
 		return false;
 
-	if ( gsm_register(120) ) // Is 2 minutes long enough??
+	if ( gsm_register() )
 	{
 		gsm_remember_band();
 		if ( !tx_prepare() )
@@ -159,30 +158,24 @@ void gsm_tx_iterate()
 			
 			transmit_callback();
 			break;
+		case kTxStreaming:
+			//pass
+			break;
 		case kTxSending:
-		 	counter = TX_CONFIRMATION_TIMEOUT;
-			while ( !tx_confirm() && --counter > 0 )
-				continue;
+			if ( tx_send() )
+			{
+				counter = TX_CONFIRMATION_TIMEOUT;
+				while ( !tx_confirm() && --counter > 0 )
+					continue;
 
-			if ( counter > 0 )
-				state.tx_error = kTxErrorNone; // The only explicit success condition
+				if ( counter > 0 )
+					state.tx_error = kTxErrorNone; // The only explicit success condition
+			}
 
 			state.tx_state = kTxIdle;
 			transmit_callback();
 			
-			// if ( result == 2 && state.tx_type == kTxSMS )
-			// {
-			// 	capture_error();
-			// }
-			// else
-			// {
-			// 	strcpy( mib_buffer, "GPRS ERROR : " );
-			// 	strcpy( mib_buffer+13, uint_buf );
-
-			// 	bus_master_begin_rpc();
-			// 	bus_master_prepare_rpc( 42, 0x20, plist_with_buffer( 0, 13+strlen(uint_buf) ) );
-			// 	bus_master_send_rpc( 8 );
-			// }
+			//TODO: Log the error?
 			
 			gsm_off();
 			break;
@@ -195,7 +188,7 @@ void gsm_tx_run() // Mainline loop
 	{
 		gsm_tx_iterate();
 	}
-	gsm_tx_abandon(); // make sure everything is cleaned up
+	gsm_off(); // make sure everything is cleaned up
 }
 
 static bool tx_send()
@@ -213,21 +206,13 @@ static bool tx_send()
 }
 bool gsm_tx_finish()
 {
-	if ( !tx_send() )
-	{
-		state.tx_state = kTxIdle;
-		gsm_off();
+	if ( state.tx_state != kTxStreaming )
 		return false;
-	}
-	else
-	{
-		state.tx_state = kTxSending;
-		return true;
-	}	
+	state.tx_state = kTxSending;
+	return true;
 }
 
 void gsm_tx_abandon()
 {
 	state.tx_state = kTxIdle;
-	gsm_off();
 }
