@@ -66,6 +66,7 @@ static sensor_event   event_buffer[EVENT_BUFFER_SIZE];
 //TODO: Implement dynamic report routing based on an initial "registration" ping to the coordinator address
 #define DEFAULT_WEB_ROUTE "https://strato.welldone.org/gateway/http"
 #define DEFAULT_SMS_ROUTE "+447903568420"
+// US ALT +14159928370
 #define DEFAULT_GPRS_APN "JTM2M"
 
 extern unsigned int last_battery_voltage;
