@@ -1,0 +1,5 @@
+setup:
+- echo "SETUP COMPLETE"
+build:
+- cd /vagrant
+- ./tools/automation/build_all.sh

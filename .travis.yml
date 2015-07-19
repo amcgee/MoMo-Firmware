@@ -3,3 +3,11 @@ before_install:
 - sudo bash -c "export MOMO_DEV=true; ./tools/automation/provision.sh"
 script:
 - ./tools/automation/build_all.sh
+addons:
+  artifacts:
+    key:
+      secure: YS5nahedUdcVJM1PJzFBStFOZn7eZYJD2nCyfG1YkDEO/EOc1eHcKQXZPaUE9SI4lXqipqUPZ4qTfPsUm6TdaUlNTN+feBxOnYwX9CvRSXwOT56Ls7ahzYn7rbmQtNuzd1sPatQEbOVuU2eFQUh/FkTZEamqsR3l9bgGlKUuB0M=
+    secret:
+      secure: KvKqr+cazvr7GIVZQfEwxCQR3r8zRVtyD5V8aKuhq4mWKZ857wzv7/JGu0Pnldn34SH7BifzXSwFJnd0ghu7MHMavfviCtaLROqf3xgcSffDJ009spqDRscASophDcM2xhHzs8Z0GpIALcEQPL4/MDbRY76bno2cF0GRt3rH2Fs=
+    bucket: momobuilds
+    debug: true
